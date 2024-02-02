@@ -35,9 +35,10 @@ class Pong {
     }
 
     init() {
-        this.score = 0;
+        this.turn = "right"; // left, right
         this.ball = new Ball(50, 50);
-        this.board = new Board(0);
+        this.boardLeft = new Board(0, 0);
+        this.boardRight = new Board(window.innerWidth - Board.size, 0);
 
         // Render the first frame
         this.render(0);
@@ -53,15 +54,19 @@ class Pong {
 
             switch(e.key) {
                 case "ArrowUp":
-                    this.board.moving = 1;
+                    this.turn === "left"
+                    ? this.boardLeft.moving = 1
+                    : this.boardRight.moving = 1;
                     break;
                 case "ArrowDown":
-                    this.board.moving = -1;
+                    this.turn === "left"
+                    ? this.boardLeft.moving = -1
+                    : this.boardRight.moving = -1;
                     break;
             }
         });
 
-        document.body.addEventListener("keyup", () => this.board.moving = 0);
+        document.body.addEventListener("keyup", () => this.boardLeft.moving = this.boardRight.moving = 0);
 
         this.app.view.addEventListener("click", () => {
             if(this.hasBegun) return;
@@ -83,15 +88,24 @@ class Pong {
         // Ball
         this.ball.render(this, delta);
         // Board
-        this.board.render(this, delta);
-        // Score
-        var scoreText = new PIXI.Text(this.score.toString(), {
-            fontSize: 36,
+        this.boardLeft.render(this, delta);
+        this.boardRight.render(this, delta);
+        // Player Left Score
+        var leftScoreText = new PIXI.Text(this.boardLeft.score.toString(), {
+            fontSize: 64,
             fill: 0xffffff
         });
-        scoreText.x = window.innerWidth - scoreText.width - 50;
-        scoreText.y = 50;
-        this.frame.addChild(scoreText);
+        leftScoreText.x = 200;
+        leftScoreText.y = 50;
+        this.frame.addChild(leftScoreText);
+        // Player Right Score
+        var rightScoreText = new PIXI.Text(this.boardRight.score.toString(), {
+            fontSize: 64,
+            fill: 0xffffff
+        });
+        rightScoreText.x = window.innerWidth - rightScoreText.width - 200;
+        rightScoreText.y = 50;
+        this.frame.addChild(rightScoreText);
         // Starting text
         if(!this.hasBegun) {
             var startingText = new PIXI.Text("Press any key to start...", {
@@ -106,11 +120,11 @@ class Pong {
         this.app.stage.addChild(this.frame);
     }
 
-    restart() {
-        this.hasBegun = false;
-        this.app.ticker.remove(this.ticker);
-        this.init();
-    }
+    // restart() {
+    //     this.hasBegun = false;
+    //     this.app.ticker.remove(this.ticker);
+    //     this.init();
+    // }
 }
 
 class Ball {
@@ -132,13 +146,6 @@ class Ball {
             this.y = window.innerHeight - this.radius;
         }
 
-        if(this.x >= window.innerWidth - this.radius) {
-            this.speed.x = -this.speed.x;
-            this.x = window.innerWidth - this.radius;
-            this.speed.x = -getRandom(10, 35);
-            this.speed.y -= 50;
-        }
-
         if(this.y <= this.radius) {
             this.speed.y = -this.speed.y;
             this.y = this.radius;
@@ -146,18 +153,47 @@ class Ball {
         }
 
         if(
-            (this.x <= game.board.size + this.radius) &&
-            (this.y >= game.board.top && this.y <= game.board.top + game.board.length)
+            game.turn === "left" &&
+            this.x <= Board.size + this.radius &&
+            (this.y >= game.boardLeft.top && this.y <= game.boardLeft.top + game.boardLeft.length)
         ) {
             this.speed.x = -this.speed.x;
-            this.x = game.board.size + this.radius;
+            this.x = Board.size + this.radius;
             this.speed.x = getRandom(10, 35);
             this.speed.y -= 50;
 
-            game.score++;
-        } else if(this.x <= 0) {
-            game.restart();
-            return;
+            game.boardLeft.score++;
+            game.turn = "right";
+        } else if(this.x <= this.radius) {
+            this.speed.x = -this.speed.x;
+            this.x = this.radius;
+            this.speed.x = getRandom(10, 35);
+            this.speed.y -= 50;
+
+            game.boardRight.score++;
+            game.turn = "right"
+        }
+
+        if(
+            game.turn === "right" &&
+            this.x >= window.innerWidth - Board.size - this.radius &&
+            (this.y >= game.boardRight.top && this.y <= game.boardRight.top + game.boardRight.length)
+        ) {
+            this.speed.x = -this.speed.x;
+            this.x = window.innerWidth - Board.size - this.radius;
+            this.speed.x = -getRandom(10, 35);
+            this.speed.y -= 50;
+
+            game.boardRight.score++;
+            game.turn = "left";
+        } else if(this.x >= window.innerWidth - this.radius) {
+            this.speed.x = -this.speed.x;
+            this.x = window.innerWidth - this.radius;
+            this.speed.x = -getRandom(10, 35);
+            this.speed.y -= 50;
+
+            game.boardLeft.score++;
+            game.turn = "left";
         }
 
         game.frame.beginFill(0xffffff);
@@ -167,11 +203,14 @@ class Ball {
 }
 
 class Board {
-    constructor(top) {
-        this.top = top;
-        this.size = 10;
+    static size = 10;
+
+    constructor(x, y) {
+        this.x = x;
+        this.top = y;
         this.length = window.innerHeight * .4;
         this.speed = 10;
+        this.score = 0;
 
         this.moving = 0;
     }
@@ -181,7 +220,7 @@ class Board {
         if(this.moving === -1 && this.top < window.innerHeight - this.length) this.top += this.speed;
 
         game.frame.beginFill(0xffffff);
-        game.frame.drawRect(0, this.top, this.size, this.length);
+        game.frame.drawRect(this.x, this.top, Board.size, this.length);
         game.frame.endFill();
     }
 }
