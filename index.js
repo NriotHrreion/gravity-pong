@@ -1,3 +1,4 @@
+/* Copyright (c) NriotHrreion 2024 */
 var app = new PIXI.Application({ width: window.innerWidth, height: window.innerHeight });
 document.body.appendChild(app.view);
 
@@ -12,9 +13,8 @@ class Vector {
         this.y += vector.y;
     }
 
-    multiply(n) {
-        this.x *= n;
-        this.y *= n;
+    getMultiplied(n) {
+        return new Vector(this.x * n, this.y * n);
     }
 
     get length() {
@@ -22,7 +22,7 @@ class Vector {
     }
 }
 
-const g = new Vector(0, 4); // gravity
+const g = new Vector(0, 5); // gravity
 
 class Pong {
     constructor(app) {
@@ -123,7 +123,7 @@ class Ball {
 
     render(game, delta) {
         // Move
-        this.speed.add(g);
+        this.speed.add(g.getMultiplied(delta));
         this.x += this.speed.x;
         this.y += this.speed.y;
 
@@ -170,7 +170,7 @@ class Board {
     constructor(top) {
         this.top = top;
         this.size = 10;
-        this.length = 400;
+        this.length = window.innerHeight * .4;
         this.speed = 10;
 
         this.moving = 0;
