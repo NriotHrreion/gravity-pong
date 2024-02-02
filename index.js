@@ -119,12 +119,6 @@ class Pong {
 
         this.app.stage.addChild(this.frame);
     }
-
-    // restart() {
-    //     this.hasBegun = false;
-    //     this.app.ticker.remove(this.ticker);
-    //     this.init();
-    // }
 }
 
 class Ball {
@@ -170,7 +164,7 @@ class Ball {
             this.speed.x = getRandom(10, 35);
             this.speed.y -= 50;
 
-            game.boardRight.score++;
+            game.boardLeft.score--;
             game.turn = "right"
         }
 
@@ -192,7 +186,7 @@ class Ball {
             this.speed.x = -getRandom(10, 35);
             this.speed.y -= 50;
 
-            game.boardLeft.score++;
+            game.boardRight.score--;
             game.turn = "left";
         }
 
