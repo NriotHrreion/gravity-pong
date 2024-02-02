@@ -28,8 +28,10 @@ class Pong {
     constructor(app) {
         this.app = app;
         this.hasBegun = false;
+        this.ticker = (delta) => this.render(delta);
 
         this.init();
+        this.registerListeners();
     }
 
     init() {
@@ -39,8 +41,9 @@ class Pong {
 
         // Render the first frame
         this.render(0);
+    }
 
-        // Listeners
+    registerListeners() {
         document.body.addEventListener("keydown", (e) => {
             if(!this.hasBegun) {
                 this.hasBegun = true;
@@ -69,7 +72,7 @@ class Pong {
     }
 
     start() {
-        this.app.ticker.add((delta) => this.render(delta));
+        this.app.ticker.add(this.ticker);
     }
 
     render(delta) {
@@ -104,7 +107,9 @@ class Pong {
     }
 
     restart() {
-        window.location.reload();
+        this.hasBegun = false;
+        this.app.ticker.remove(this.ticker);
+        this.init();
     }
 }
 
@@ -152,6 +157,7 @@ class Ball {
             game.score++;
         } else if(this.x <= 0) {
             game.restart();
+            return;
         }
 
         game.frame.beginFill(0xffffff);
