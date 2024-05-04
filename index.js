@@ -28,7 +28,10 @@ class Pong {
     constructor(app) {
         this.app = app;
         this.hasBegun = false;
-        this.ticker = (delta) => this.render(delta);
+        this.isEnded = false;
+        this.ticker = (delta) => {
+            this.hasBegun && this.render(delta);
+        };
 
         this.init();
         this.registerListeners();
@@ -80,6 +83,11 @@ class Pong {
         this.app.ticker.add(this.ticker);
     }
 
+    stop() {
+        this.hasBegun = false;
+        this.isEnded = true;
+    }
+
     render(delta) {
         // Reset Canvas
         if(this.frame) this.app.stage.removeChild(this.frame);
@@ -107,14 +115,24 @@ class Pong {
         rightScoreText.y = 50;
         this.frame.addChild(rightScoreText);
         // Starting text
-        if(!this.hasBegun) {
-            var startingText = new PIXI.Text("Press any key to start...", {
+        if(!this.hasBegun && !this.isEnded) {
+            var startingText = new PIXI.Text("按任意键开始游戏...", {
                 fontSize: 34,
                 fill: 0xffffff
             });
             startingText.x = window.innerWidth / 2 - startingText.width / 2;
             startingText.y = window.innerHeight / 2 - startingText.height / 2;
             this.frame.addChild(startingText);
+        }
+        // Ending text
+        if(this.isEnded) {
+            var endingText = new PIXI.Text("游戏结束！", {
+                fontSize: 64,
+                fill: 0xffffff
+            });
+            endingText.x = window.innerWidth / 2 - endingText.width / 2;
+            endingText.y = window.innerHeight / 2 - endingText.height / 2;
+            this.frame.addChild(endingText);
         }
 
         this.app.stage.addChild(this.frame);
@@ -154,7 +172,7 @@ class Ball {
             this.speed.x = -this.speed.x;
             this.x = Board.size + this.radius;
             this.speed.x = getRandom(10, 35);
-            this.speed.y -= 50;
+            this.speed.y -= 100;
 
             game.boardLeft.score++;
             game.turn = "right";
@@ -162,7 +180,7 @@ class Ball {
             this.speed.x = -this.speed.x;
             this.x = this.radius;
             this.speed.x = getRandom(10, 35);
-            this.speed.y -= 50;
+            this.speed.y -= 100;
 
             game.boardLeft.score--;
             game.turn = "right"
@@ -176,7 +194,7 @@ class Ball {
             this.speed.x = -this.speed.x;
             this.x = window.innerWidth - Board.size - this.radius;
             this.speed.x = -getRandom(10, 35);
-            this.speed.y -= 50;
+            this.speed.y -= 100;
 
             game.boardRight.score++;
             game.turn = "left";
@@ -184,7 +202,7 @@ class Ball {
             this.speed.x = -this.speed.x;
             this.x = window.innerWidth - this.radius;
             this.speed.x = -getRandom(10, 35);
-            this.speed.y -= 50;
+            this.speed.y -= 100;
 
             game.boardRight.score--;
             game.turn = "left";
@@ -216,6 +234,11 @@ class Board {
         game.frame.beginFill(0xffffff);
         game.frame.drawRect(this.x, this.top, Board.size, this.length);
         game.frame.endFill();
+
+        // End
+        if(this.score === 5) {
+            game.stop();
+        }
     }
 }
 
